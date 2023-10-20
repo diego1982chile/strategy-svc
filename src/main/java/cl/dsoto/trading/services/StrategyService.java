@@ -10,6 +10,7 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -27,7 +28,7 @@ public class StrategyService {
     private EntityManager entityManager;
     private StrategyRepository strategyRepository;
 
-    @Named
+    @Inject
     private StrategyMapper strategyMapper;
 
     @PostConstruct
@@ -44,7 +45,10 @@ public class StrategyService {
 
         List<Strategy> strategies = new ArrayList<>();
 
-        strategiesEntities.forEach(s -> strategies.add(strategyMapper.toDomain(s)));
+        for (StrategyEntity strategiesEntity : strategiesEntities) {
+            Strategy strategy = strategyMapper.toDomain(strategiesEntity);
+            strategies.add(strategy);
+        }
 
         return strategies.stream().filter(s -> s.getProblemType().equals(problemType)).collect(Collectors.toList());
     }

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.Year;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
@@ -46,9 +47,8 @@ public class WFO {
     public int calculateOffset() throws Exception {
 
         int offSet = 0;
-        Duration duration = Duration.between(start, end);
-        int daysPerYear = 365;
-        long range = duration.toDays() / daysPerYear;
+        Period duration = start.until(end);
+        long range = duration.getYears();
 
         switch (step) {
             case YEAR:
@@ -107,23 +107,20 @@ public class WFO {
 
 
     public int calculateTrainRange() throws Exception {
-        Duration duration = Duration.between(start, end);
-        int daysPerYear = 365;
-        long range = duration.toDays() / daysPerYear;
+        Period duration = start.until(end);
+        long range = duration.getYears();
         return (int) (range * inSample);
     }
 
     public int calculateTestRange() throws Exception {
-        Duration duration = Duration.between(start, end);
-        int daysPerYear = 365;
-        long range = duration.toDays() / daysPerYear;
+        Period duration = start.until(end);
+        long range = duration.getYears();
         return (int) (range * outSample);
     }
 
     public int calculateIterations() {
-        Duration duration = Duration.between(start, end);
-        int daysPerYear = 365;
-        long range = duration.toDays() / daysPerYear;
+        Period duration = start.until(end);
+        long range = duration.getYears();
         return (int) ((1 - (inSample + outSample)) * range);
     }
 

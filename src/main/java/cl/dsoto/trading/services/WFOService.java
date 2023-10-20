@@ -1,6 +1,7 @@
 package cl.dsoto.trading.services;
 
 
+import cl.dsoto.trading.clients.BarClient;
 import cl.dsoto.trading.clients.EodhdClient;
 import cl.dsoto.trading.daos.StockMarketDAO;
 import cl.dsoto.trading.entities.WFOEntity;
@@ -34,17 +35,21 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 
 import java.io.FileOutputStream;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Level;
@@ -60,7 +65,7 @@ import static cl.dsoto.trading.constants.ServiceConstants.*;
 public class WFOService {
 
     @Inject
-    StockMarketDAO stockMarketDAO;
+    BarClient barClient;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -124,7 +129,9 @@ public class WFOService {
         WFOEntity wfoEntity = wfoMapper.toEntity(wfo);
         wfoRepository.save(wfoEntity);
 
-        TimeSeries data = stockMarketDAO.getHistoricalPrice(wfo.getTimeFrame(), wfo.getStart(), wfo.getEnd());
+        Response response = barClient.getBars(wfo.getTimeFrame(), wfo.getStart().toString(), wfo.getEnd().toString());
+
+        TimeSeries data = mapTimeSeriesFromResponse(response, wfo);
 
         int correlative = 1;
 
@@ -596,6 +603,35 @@ public class WFOService {
         }
 
         return parameters;
+    }
+
+    private TimeSeries mapTimeSeriesFromResponse(Response response, WFO wfo) {
+
+        JsonArray jsonArray = response.readEntity(JsonArray.class);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        TimeSeries data = new BaseTimeSeries(wfo.getName());
+
+        for (JsonValue jsonValue : jsonArray) {
+
+            //public BaseBar(Duration timePeriod, ZonedDateTime endTime, Decimal openPrice, Decimal highPrice, Decimal lowPrice, Decimal closePrice, Decimal volume, Decimal amount) {
+
+            JsonObject jsonObject = jsonValue.asJsonObject();
+
+            Duration timePeriod = Duration.parse(jsonObject.getString("timePeriod"));
+            ZonedDateTime endTime = ZonedDateTime.parse(jsonObject.getString("endTime"));
+            Decimal openPrice = Decimal.valueOf(jsonObject.getJsonNumber("openPrice").bigDecimalValue());
+            Decimal maxPrice = Decimal.valueOf(jsonObject.getJsonNumber("maxPrice").bigDecimalValue());
+            Decimal minPrice = Decimal.valueOf(jsonObject.getJsonNumber("minPrice").bigDecimalValue());
+            Decimal closePrice = Decimal.valueOf(jsonObject.getJsonNumber("closePrice").bigDecimalValue());
+            Decimal volume = Decimal.valueOf(jsonObject.getJsonNumber("volume").bigDecimalValue());
+            Decimal amount = Decimal.valueOf(jsonObject.getJsonNumber("amount").bigDecimalValue());
+
+            data.addBar(new BaseBar(timePeriod, endTime, openPrice, maxPrice, minPrice, closePrice, volume, amount));
+        }
+
+        return data;
     }
 
 }

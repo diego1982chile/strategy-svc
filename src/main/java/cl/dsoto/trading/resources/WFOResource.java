@@ -26,8 +26,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @RequestScoped
 @Produces(APPLICATION_JSON)
 @Path("wfos")
-//@RolesAllowed({"ADMIN","USER"})
-@PermitAll
+@RolesAllowed({"ADMIN","USER"})
+//@PermitAll
 @Log4j
 public class WFOResource {
 
