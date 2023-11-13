@@ -22,7 +22,12 @@ public class Solution<T extends Comparable> implements Serializable {
      */
     private long id;
 
+    Optimization optimization;
+
     List<T> values;
 
-
+    public Solution(Optimization optimization, List<T> values) {
+        this.optimization = optimization;
+        this.values = values;
+    }
 }

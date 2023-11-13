@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -108,8 +109,8 @@ public class WFOResource {
     @Path("process")
     public Response processWFO(WFO wfo) {
         try {
-            ListenableFuture<Void> response = wfoService.process(wfo);
-            return Response.ok(response).build();
+            WFO newWFO = wfoService.process(wfo);
+            return Response.ok(newWFO).build();
         }
         catch (Exception e) {
             log.error(e.getMessage());
@@ -117,28 +118,31 @@ public class WFOResource {
         return Response.serverError().entity(errorMsg).build();
     }
 
-    /*
+    @POST
+    @Path("abort")
+    public Response abortWFO(WFO wfo) {
+        try {
+            WFO newWFO = wfoService.abort(wfo);
+            return Response.ok(newWFO).build();
+        }
+        catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return Response.serverError().entity(errorMsg).build();
+    }
+
+
     @DELETE
     @Path("delete/{id}")
-    public Response deleteHouse(@PathParam("id") long id) {
+    public Response deleteWFO(@PathParam("id") long id) {
         try {
-            houseService.deleteHouse(id);
+            wfoService.deleteWFO(id);
             return Response.ok(id).build();
         }
         catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage());
+            log.error(e.getMessage());
         }
         return Response.serverError().build();
     }
 
-    private String getRootCause(Exception e) {
-        Throwable cause = e.getCause();
-
-        while(cause.getCause() != null) {
-            cause = cause.getCause();
-        }
-
-        return cause.getMessage();
-    }
-    */
 }

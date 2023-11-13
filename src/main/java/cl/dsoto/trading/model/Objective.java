@@ -21,5 +21,8 @@ public class Objective implements Serializable {
     private Optimization optimization;
     private double objective;
 
-
+    public Objective(Optimization optimization, double objective) {
+        this.optimization = optimization;
+        this.objective = objective;
+    }
 }

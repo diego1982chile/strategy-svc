@@ -44,6 +44,7 @@ public class WFO {
 
     List<WFORecord> wfoRecords = new ArrayList();
 
+    /*
     public int calculateOffset() throws Exception {
 
         int offSet = 0;
@@ -103,6 +104,29 @@ public class WFO {
         }
 
         return (int) (offSet * range * inSample);
+    }
+    */
+
+    public int calculateOffset() throws Exception {
+
+        int offSet = 0;
+        Period duration = start.until(end);
+        long range = duration.getYears();
+
+
+        switch (timeFrame) {
+            case DAY:
+                offSet = 6*4*12;
+                break;
+            case HOUR:
+                offSet = 6*4*12*24;
+                break;
+            default:
+                throw new Exception("Unsupported combination of step/timeframe!");
+        }
+
+        //return (int) (offSet * range);
+        return (int) (offSet);
     }
 
 
